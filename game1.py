@@ -1,4 +1,5 @@
 import pygame
+import random
 
 from pygame.locals import (
     K_UP,
@@ -30,6 +31,19 @@ class Player(pygame.sprite.Sprite):
         if pressed_keys[K_RIGHT]:
             self.rect.move_ip(5, 0)
 
+        if self.rect.left < 0:
+            self.rect.left = 0
+        if self.rect.right > SCREEN_WIDTH:
+            self.rect.right = SCREEN_WIDTH
+        if self.rect.top <= 0:
+            self.rect.top = 0
+        if self.rect.bottom >= SCREEN_HEIGHT:
+            self.rect.bottom = SCREEN_HEIGHT
+            
+            # self represents instance of class
+            # by using self we can access methods and properties
+            # self is always pointing to current object
+
 pygame.init()
 
 screen = pygame.display.set_mode([SCREEN_WIDTH,SCREEN_HEIGHT])
@@ -44,7 +58,26 @@ while running:
                 running = False
         if event.type == QUIT:
             running = False
-    
+        
+    class Enemy(pygame.sprite.Sprite):
+        def __init__(self):
+            super(Enemy, self).__init__()
+            self.surf = pygame.Surface((20, 10))
+            self.surf.fill((255, 255, 255))
+            self.rect = self.surf.get_rect(
+                center = (
+                    random.randint(SCREEN_WIDTH + 20, SCREEN_WIDTH + 100),
+                    random.randint(0, SCREEN_HEIGHT),
+                )
+            )
+            self.speed = random.randint(5, 20)
+        
+        def update(self):
+            self.rect_move_ip(-self.speed, 0)
+            if self.rect.right < 0:
+                self.kill()
+
+
     surf_center = (
         (SCREEN_WIDTH - player.surf.get_width())/2,
         (SCREEN_HEIGHT - player.surf.get_height())/2
