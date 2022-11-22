@@ -18,7 +18,7 @@ SCREEN_HEIGHT = 500
 class Player(pygame.sprite.Sprite):
     def __init__(self):
         super(Player, self).__init__()
-        self.surf = pygame.image.load("jet.png").convert()
+        self.surf = pygame.image.load("./img/jet.png").convert()
         self.surf.set_colorkey((255, 255, 255), RLEACCEL)
         self.rect = self.surf.get_rect()
     
@@ -44,6 +44,7 @@ class Player(pygame.sprite.Sprite):
             # self represents instance of class
             # by using self we can access methods and properties
             # self is always pointing to current object
+pygame.mixer.init()
 
 pygame.init()
 
@@ -57,7 +58,7 @@ pygame.time.set_timer(ADDCLOUD, 1000)
 class Cloud(pygame.sprite.Sprite):
     def __init__(self):
         super(Cloud, self).__init__()
-        self.surf = pygame.image.load("cloud.png").convert()
+        self.surf = pygame.image.load("./img/cloud.png").convert()
         self.surf.set_colorkey((0, 0, 0), RLEACCEL)
 
         self.rect = self.surf.get_rect(
@@ -73,12 +74,18 @@ class Cloud(pygame.sprite.Sprite):
             self.kill()
 
 
-
+clock = pygame.time.Clock()
 player = Player()
 
 enemies = pygame.sprite.Group()
+clouds = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player)
+
+pygame.mixer.music.load("./sound/jet_sound.wav")
+pygame.mixer.music.play(loops=-1)
+collision_sound = pygame.mixer.Sound("./sound/collision.wav")
+
 
 running = True
 while running:
@@ -92,11 +99,15 @@ while running:
             new_enemy = Enemy()
             enemies.add(new_enemy)
             all_sprites.add(new_enemy)
+        elif event.type == ADDCLOUD:
+            new_cloud = Cloud()
+            clouds.add(new_cloud)    # position updates done by using clouds and enemies
+            all_sprites.add(new_cloud)   # rendering is done using all_sprites
         
     class Enemy(pygame.sprite.Sprite):
         def __init__(self):
             super(Enemy, self).__init__()
-            self.surf = pygame.image.load("missile.png").convert()
+            self.surf = pygame.image.load("./img/missile.png").convert()
             self.surf.set_colorkey((255, 255, 255), RLEACCEL)
             self.rect = self.surf.get_rect(
                 center = (
@@ -122,16 +133,23 @@ while running:
     player.update(pressed_keys)
 
     enemies.update()
+    clouds.update()
+
+    screen.fill((135, 206, 250))
+
+    current_time = pygame.time.get_ticks()
+    exit_time = current_time + 5000
 
     for entity in all_sprites:
         screen.blit(entity.surf, entity.rect)
 
     if pygame.sprite.spritecollideany(player, enemies):
         player.kill()
-        running = False
-    
+        collision_sound.play()
+        current_time = pygame.time.get_ticks()
+        if current_time >= exit_time:
+            running = False
 
-    screen.fill((0, 0, 0))
 
     for entity in all_sprites:
         screen.blit(entity.surf, entity.rect)
@@ -140,6 +158,7 @@ while running:
 
     pygame.display.flip()
     
+    clock.tick(30)
 
     # use flip to show on display
 
